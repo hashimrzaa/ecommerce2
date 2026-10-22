@@ -73,6 +73,10 @@ class Cart
             return $this->lines;
         }
         $raw = $this->raw();
+        // The header shows the cart total on every page: an empty cart must not cost a database round trip.
+        if (! $raw) {
+            return $this->lines = collect();
+        }
         $products = Product::whereIn('id', array_column($raw, 'product_id'))->get()->keyBy('id');
 
         return $this->lines = collect($raw)->map(function ($line, $key) use ($products) {

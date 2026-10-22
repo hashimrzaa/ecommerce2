@@ -61,10 +61,10 @@ class Category extends Model
      * A category with its parents attached, read from a cached copy of the (small) category table,
      * so breadcrumbs cost no database round trips.
      */
-    public static function withAncestors(int $id): ?self
+    public static function withAncestors(int|string $id, string $by = 'id'): ?self
     {
         $all = Cache::remember('categories.all', 3600, fn () => static::all()->keyBy('id'));
-        $category = $all->get($id);
+        $category = $by === 'id' ? $all->get($id) : $all->firstWhere($by, $id);
         for ($node = $category; $node?->parent_id; $node = $parent) {
             $parent = $all->get($node->parent_id);
             $node->setRelation('parent', $parent);

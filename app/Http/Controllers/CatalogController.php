@@ -31,7 +31,7 @@ class CatalogController extends Controller
 
     public function category(Request $request, string $path)
     {
-        $category = Category::where('path', $path)->firstOrFail();
+        $category = Category::withAncestors($path, 'path') ?? abort(404);
         $trail = $category->trail();
         abort_unless(collect($trail)->every->is_visible, 404);
 
@@ -108,7 +108,8 @@ class CatalogController extends Controller
         $baseIds = (clone $base)->pluck('products.id');
         $keys = config("store.filter_sets.$set");
         $facets = $this->facets($baseIds, $keys);
-        $priceRange = [(int) (clone $base)->min('price'), (int) (clone $base)->max('price')];
+        $bounds = (clone $base)->toBase()->selectRaw('MIN(price) AS lo, MAX(price) AS hi')->first();
+        $priceRange = [(int) $bounds?->lo, (int) $bounds?->hi];
 
         $query = clone $base;
         $selected = collect($request->query('f', []))->only($keys)->map(fn ($v) => array_values(array_filter((array) $v, 'is_string')))->filter();
