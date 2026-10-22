@@ -7,6 +7,8 @@
     <meta name="robots" content="noindex, nofollow">
     <meta name="turbo-cache-control" content="no-cache">
     <meta name="turbo-refresh-scroll" content="preserve">
+    {{-- Links load while hovered. The local dev server answers one request at a time, so it only gets the click. --}}
+    @if (app()->isLocal())<meta name="turbo-prefetch" content="false">@endif
     <title>@yield('title', 'Admin') — {{ config('store.name') }} Admin</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">

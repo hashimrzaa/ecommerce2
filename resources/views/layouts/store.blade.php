@@ -8,6 +8,8 @@
     {{-- Pages are swapped in the background; a fresh copy is always fetched so cart and stock are never stale. --}}
     <meta name="turbo-cache-control" content="no-cache">
     <meta name="turbo-refresh-scroll" content="preserve">
+    {{-- Links load while hovered. The local dev server answers one request at a time, so it only gets the click. --}}
+    @if (app()->isLocal())<meta name="turbo-prefetch" content="false">@endif
     <meta name="view-transition" content="same-origin">
     <title>@hasSection('title')@yield('title') — @endif{{ config('store.name') }}</title>
     <meta name="description" content="@yield('description', config('store.tagline').'. Cash on Delivery and easy exchange.')">

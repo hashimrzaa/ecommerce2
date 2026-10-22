@@ -21,6 +21,7 @@ class Category extends Model
     public static function flushNav(): void
     {
         Cache::forget('nav.tree');
+        Cache::forget('categories.all');
         Cache::forever('nav.version', (string) microtime(true));
         Product::flushCatalog();
     }
@@ -56,6 +57,22 @@ class Category extends Model
     }
 
     /** Ancestors from department down to (and including) this category. */
+    /**
+     * A category with its parents attached, read from a cached copy of the (small) category table,
+     * so breadcrumbs cost no database round trips.
+     */
+    public static function withAncestors(int $id): ?self
+    {
+        $all = Cache::remember('categories.all', 3600, fn () => static::all()->keyBy('id'));
+        $category = $all->get($id);
+        for ($node = $category; $node?->parent_id; $node = $parent) {
+            $parent = $all->get($node->parent_id);
+            $node->setRelation('parent', $parent);
+        }
+
+        return $category;
+    }
+
     public function trail(): array
     {
         $trail = [$this];

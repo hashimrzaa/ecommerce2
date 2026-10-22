@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -9,7 +10,8 @@ class ProductController extends Controller
 {
     public function show(Request $request, string $slug)
     {
-        $product = Product::listed()->where('slug', $slug)->with(['category.parent.parent', 'supplier'])->firstOrFail();
+        $product = Product::listed()->where('slug', $slug)->firstOrFail();
+        $product->setRelation('category', Category::withAncestors($product->category_id));
 
         if ($product->is_restricted && ! session('age_ok')) {
             return view('store.age-gate', ['category' => $product->category->parent, 'intended' => $request->fullUrl()]);
@@ -32,7 +34,7 @@ class ProductController extends Controller
             : collect();
 
         $recentIds = collect(session('recent', []))->reject(fn ($id) => $id === $product->id)->take(10);
-        $recent = Product::listed()->where('is_restricted', false)->whereIn('id', $recentIds)->get()
+        $recent = $recentIds->isEmpty() ? collect() : Product::listed()->where('is_restricted', false)->whereIn('id', $recentIds)->get()
             ->sortBy(fn ($p) => $recentIds->search($p->id))->values();
         if (! $product->is_restricted) {
             session(['recent' => $recentIds->prepend($product->id)->take(12)->values()->all()]);
@@ -41,8 +43,9 @@ class ProductController extends Controller
         return view('store.product', [
             'product' => $product,
             'trail' => $product->category->trail(),
-            'reviews' => $product->reviews()->where('status', 'approved')->latest()->limit(12)->get(),
-            'breakdown' => $product->reviews()->where('status', 'approved')->selectRaw('rating, COUNT(*) c')->groupBy('rating')->pluck('c', 'rating'),
+            // rating_count only counts approved reviews, so a product without any needs no review queries.
+            'reviews' => $product->rating_count ? $product->reviews()->where('status', 'approved')->latest()->limit(12)->get() : collect(),
+            'breakdown' => $product->rating_count ? $product->reviews()->where('status', 'approved')->selectRaw('rating, COUNT(*) c')->groupBy('rating')->pluck('c', 'rating') : collect(),
             'related' => $related,
             'together' => $together,
             'recent' => $recent,
