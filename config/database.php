@@ -66,6 +66,9 @@ return [
                     ?: (! in_array(env('DB_HOST', '127.0.0.1'), ['127.0.0.1', 'localhost'], true) && is_file(database_path('ca.pem')) ? database_path('ca.pem') : null),
                 // Reuse the encrypted connection across requests on a warm server instead of a new TLS handshake each time.
                 PDO::ATTR_PERSISTENT => (bool) env('DB_PERSISTENT', false),
+                // One network round trip per query instead of two (prepare + execute). Values are still escaped by PDO,
+                // and PHP 8.1+ keeps returning native int/float types.
+                PDO::ATTR_EMULATE_PREPARES => true,
             ]) : [],
         ],
 

@@ -94,7 +94,7 @@
         </div>
 
         {{-- Departments menu: identical for every visitor, so its HTML is rendered once and reused --}}
-        {!! Cache::remember('nav.desktop.'.\App\Models\Category::navVersion(), 86400, fn () => view('partials.nav-desktop', ['nav' => $nav])->render()) !!}
+        {!! Cache::remember('nav.desktop.v2.'.\App\Models\Category::navVersion(), 86400, fn () => view('partials.nav-desktop', ['nav' => $nav])->render()) !!}
         <div data-scroll-progress class="absolute inset-x-0 bottom-[-2px] z-10 h-0.5 bg-primary" aria-hidden="true"></div>
     </header>
 

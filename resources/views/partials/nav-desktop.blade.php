@@ -1,10 +1,11 @@
-{{-- Cached in layouts/store: nothing visitor-specific may be rendered here. --}}
+{{-- Cached in layouts/store: nothing visitor-specific may be rendered here, and links must be relative
+     (the cached copy is reused whichever address — main domain or a Vercel preview URL — the page was opened on). --}}
 {{-- Departments: a small number of clear choices, details on hover or focus --}}
 <nav class="hidden border-t border-line lg:block" aria-label="Departments" x-data="{ open: null }" @mouseleave="open = null" @keydown.escape="open = null">
     <div class="container-page relative">
         <ul class="flex h-12 items-stretch gap-1">
             <li class="flex items-center pr-2">
-                <a href="{{ route('shop') }}" class="inline-flex h-8 items-center gap-2 rounded-full bg-sunken px-3.5 text-sm font-semibold hover:bg-line"><x-lucide-layout-grid class="size-4" aria-hidden="true" />All</a>
+                <a href="{{ route('shop', [], false) }}" class="inline-flex h-8 items-center gap-2 rounded-full bg-sunken px-3.5 text-sm font-semibold hover:bg-line"><x-lucide-layout-grid class="size-4" aria-hidden="true" />All</a>
             </li>
             @foreach ($nav as $dept)
                 @php $isDeals = $dept->kind === 'collection'; @endphp
