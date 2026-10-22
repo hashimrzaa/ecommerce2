@@ -7,7 +7,7 @@
         <x-lucide-search class="size-[1.125rem] shrink-0 text-muted" aria-hidden="true" />
         <input id="search-{{ $sid }}" x-ref="input" type="search" name="q" x-model="q" @input="onInput" @focus="focus()"
             @keydown.arrow-down.prevent="move(1)" @keydown.arrow-up.prevent="move(-1)"
-            placeholder="Search kurtis, bags, organisers…" autocomplete="off" enterkeyhint="search"
+            placeholder="Search suits, jhumkas, lipstick…" autocomplete="off" enterkeyhint="search"
             role="combobox" aria-autocomplete="list" aria-controls="suggest-{{ $sid }}" :aria-expanded="open.toString()"
             class="h-full min-w-0 flex-1 bg-transparent px-3 text-[0.9375rem] placeholder:text-muted focus:outline-none">
         <button type="button" x-show="q" x-cloak @click="q = ''; onInput(); $refs.input.focus()" class="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-line hover:text-ink" aria-label="Clear search"><x-lucide-x class="size-4" aria-hidden="true" /></button>

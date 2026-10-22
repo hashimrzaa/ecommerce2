@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#08100d">
+    <meta name="theme-color" content="#2a0f22">
     {{-- Pages are swapped in the background; a fresh copy is always fetched so cart and stock are never stale. --}}
     <meta name="turbo-cache-control" content="no-cache">
     <meta name="turbo-refresh-scroll" content="preserve">
@@ -51,8 +51,11 @@
             <button type="button" class="icon-btn -ml-2 lg:hidden" @click="menu = true" aria-label="Open menu"><x-lucide-menu class="size-6" aria-hidden="true" /></button>
 
             <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2 sm:shrink-0 sm:gap-2.5" aria-label="{{ config('store.name') }} home">
-                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-night font-display text-xl font-extrabold text-lime">{{ mb_substr(config('store.name'), 0, 1) }}</span>
-                <span class="truncate font-display text-[1.375rem] leading-none font-extrabold tracking-tight max-[300px]:hidden">{{ config('store.name') }}</span>
+                <span class="relative grid size-10 shrink-0 place-items-center rounded-full bg-night font-display text-xl font-extrabold text-lime ring-1 ring-gold/60 ring-offset-2 ring-offset-surface">{{ mb_substr(config('store.name'), 0, 1) }}</span>
+                <span class="min-w-0 leading-none max-[300px]:hidden">
+                    <span class="block truncate font-display text-[1.375rem] font-extrabold tracking-tight">{{ config('store.name') }}</span>
+                    <span class="mt-0.5 block text-[0.625rem] font-medium tracking-[0.32em] text-muted uppercase max-sm:hidden">Women's boutique</span>
+                </span>
             </a>
 
             <div class="ml-auto hidden flex-1 md:block lg:ml-6">

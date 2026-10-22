@@ -242,6 +242,7 @@ class Product extends Model
     {
         return match ($this->filter_set) {
             'bags' => 'handbag',
+            'beauty' => 'sparkles',
             'kids' => 'baby',
             'home' => 'cooking-pot',
             'electronics' => 'plug-zap',

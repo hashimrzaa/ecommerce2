@@ -27,7 +27,7 @@
 
     <aside class="fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-line bg-surface transition-transform duration-200 lg:translate-x-0" :class="nav && '!translate-x-0'">
         <div class="flex h-16 shrink-0 items-center gap-2 border-b border-line px-5">
-            <span class="grid size-8 place-items-center rounded-lg bg-primary font-display font-extrabold text-white">{{ mb_substr(config('store.name'), 0, 1) }}</span>
+            <span class="grid size-8 place-items-center rounded-full bg-night font-display font-extrabold text-lime">{{ mb_substr(config('store.name'), 0, 1) }}</span>
             <span class="font-display text-lg font-extrabold">{{ config('store.name') }}</span>
             <span class="badge badge-neutral ml-auto">Admin</span>
         </div>

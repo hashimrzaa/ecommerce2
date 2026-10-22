@@ -3,7 +3,7 @@
 return [
     // Umbrella brand (spec §18). Change here and in APP_NAME.
     'name' => env('STORE_NAME', 'Zaroori'),
-    'tagline' => 'Everyday fashion, home & gadgets — delivered across Pakistan',
+    'tagline' => 'Fashion, jewellery & beauty for women — delivered across Pakistan',
 
     'whatsapp' => env('STORE_WHATSAPP', '923001234567'),
     'phone' => env('STORE_PHONE', '0300 1234567'),
@@ -79,10 +79,11 @@ return [
         'age_group' => 'Age group', 'gender' => 'Gender', 'season' => 'Season', 'bag_type' => 'Bag type',
         'occasion' => 'Occasion', 'product_type' => 'Product type', 'use' => 'Use / function',
         'compatibility' => 'Compatibility', 'power' => 'Power / capacity', 'warranty' => 'Warranty',
-        'pack_qty' => 'Pack quantity', 'application' => 'Application', 'department' => 'Department',
+        'pack_qty' => 'Pack quantity', 'application' => 'Application', 'department' => 'Department', 'finish' => 'Finish',
     ],
     'filter_sets' => [
         'fashion' => ['size', 'colour', 'brand', 'material'],
+        'beauty' => ['product_type', 'brand', 'colour', 'finish', 'use'],
         'kids' => ['age_group', 'gender', 'size', 'colour', 'material', 'season'],
         'bags' => ['bag_type', 'material', 'colour', 'size', 'gender', 'occasion'],
         'home' => ['product_type', 'material', 'size', 'colour', 'use'],
@@ -97,6 +98,6 @@ return [
         'Olive' => '#6b7234', 'Mint' => '#a7e3c9', 'Maroon' => '#7f1d1d', 'Red' => '#dc2626', 'Pink' => '#f9a8d4',
         'Peach' => '#fdba8c', 'Mustard' => '#d4a017', 'Yellow' => '#facc15', 'Beige' => '#d9c7a8', 'Brown' => '#7c4a21',
         'Tan' => '#c19a6b', 'Purple' => '#7c3aed', 'Lilac' => '#c4b5fd', 'Silver' => '#cbd5e1', 'Gold' => '#d4af37',
-        'Steel' => '#94a3b8', 'Clear' => '#e0f2fe', 'Multi' => 'conic-gradient(#f87171,#facc15,#4ade80,#60a5fa,#f87171)',
+        'Steel' => '#94a3b8', 'Clear' => '#e0f2fe', 'Nude' => '#e3bc9a', 'Rose' => '#c2185b', 'Rose Gold' => '#b76e79', 'Ivory' => '#f4ead8', 'Multi' => 'conic-gradient(#f87171,#facc15,#4ade80,#60a5fa,#f87171)',
     ],
 ];

@@ -44,7 +44,7 @@
                 @switch($page)
                     @case('about')
                         <div class="prose-store mt-5">
-                            <p>{{ $store }} is an online store for everyday fashion, bags, home and kitchen essentials and useful gadgets — delivered to your door anywhere in Pakistan.</p>
+                            <p>{{ $store }} is an online boutique made for women — eastern and western wear, footwear, bags, jewellery and beauty — delivered to your door anywhere in Pakistan.</p>
                             <h2>How we work</h2>
                             <p>We partner directly with trusted local suppliers and manufacturers. Before a product is shown as available, we confirm its stock with the supplier, so what you order is what we can deliver.</p>
                             <h2>What you can expect</h2>

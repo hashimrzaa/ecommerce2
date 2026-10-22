@@ -145,11 +145,8 @@ class ProductController extends Controller
             'title' => $data['title'], 'sku' => $data['sku'], 'category_id' => $category->id,
             'department' => $department,
             'filter_set' => match (true) {
-                $department === 'kids' => 'kids',
-                $department === 'bags-accessories', $group === 'womens-bags' => 'bags',
-                $department === 'home-kitchen' => 'home',
-                $department === 'electronics-gadgets' => 'electronics',
-                $department === 'hardware-diy' => 'hardware',
+                $department === 'bags' => 'bags',
+                $department === 'beauty' => 'beauty',
                 default => 'fashion',
             },
             'is_restricted' => $category->is_restricted,

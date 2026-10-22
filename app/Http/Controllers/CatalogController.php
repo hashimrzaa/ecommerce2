@@ -166,11 +166,8 @@ class CatalogController extends Controller
         $parts = explode('/', $category->path);
 
         return match (true) {
-            $parts[0] === 'kids' => 'kids',
-            $parts[0] === 'bags-accessories', ($parts[1] ?? '') === 'womens-bags' => 'bags',
-            $parts[0] === 'home-kitchen' => 'home',
-            $parts[0] === 'electronics-gadgets' => 'electronics',
-            $parts[0] === 'hardware-diy' => 'hardware',
+            $parts[0] === 'bags' => 'bags',
+            $parts[0] === 'beauty' => 'beauty',
             default => 'fashion',
         };
     }

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Banner;
 use App\Models\Category;
 use App\Models\Coupon;
+use App\Models\HomeSection;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ReturnRequest;
@@ -17,8 +18,6 @@ use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
-    private const AGE_GROUPS = ['0–2 Years', '3–5 Years', '6–8 Years', '9–12 Years', '13–16 Years'];
-
     public function run(): void
     {
         mt_srand(20261009);
@@ -35,17 +34,9 @@ class DatabaseSeeder extends Seeder
 
     private function seedUsers(): void
     {
-        $staff = [
-            ['Store Owner', 'owner@zaroori.test', 'owner'],
-            ['Ayesha Manager', 'manager@zaroori.test', 'manager'],
-            ['Bilal Orders', 'orders@zaroori.test', 'orders'],
-            ['Sana Catalogue', 'catalogue@zaroori.test', 'catalogue'],
-            ['Hamza Support', 'support@zaroori.test', 'support'],
-        ];
-        foreach ($staff as [$name, $email, $role]) {
-            User::create(['name' => $name, 'email' => $email, 'role' => $role, 'password' => 'password', 'phone' => '0300'.mt_rand(1000000, 9999999)]);
-        }
-        User::create(['name' => 'Demo Customer', 'email' => 'customer@zaroori.test', 'role' => 'customer', 'password' => 'password', 'phone' => '03211234567', 'city' => 'Lahore', 'address' => 'House 12, Street 4, Johar Town']);
+        // The only staff sign-in: full access. Add more staff from Admin → Staff & permissions.
+        User::create(['name' => 'Store Admin', 'email' => 'admin@gmail.com', 'role' => 'owner', 'password' => 'User@123', 'phone' => '0300'.mt_rand(1000000, 9999999)]);
+        User::create(['name' => 'Ayesha Khan', 'email' => 'customer@gmail.com', 'role' => 'customer', 'password' => 'User@123', 'phone' => '03211234567', 'city' => 'Lahore', 'address' => 'House 12, Street 4, Johar Town']);
 
         $matrix = [
             'manager' => ['dashboard', 'orders', 'customers', 'returns', 'products', 'categories', 'suppliers', 'stock', 'pricing', 'coupons', 'reviews', 'banners', 'reports'],
@@ -78,7 +69,7 @@ class DatabaseSeeder extends Seeder
             foreach ($groups as $groupName => $leaves) {
                 $groupSlug = Str::slug($groupName);
                 $restricted = $groupSlug === 'private-intimate';
-                $kind = $isDeals ? 'collection' : ($groupSlug === 'age-groups' ? 'filter' : 'normal');
+                $kind = $isDeals ? 'collection' : 'normal';
                 $group = Category::create([
                     'parent_id' => $dept->id, 'name' => $groupName, 'slug' => $groupSlug, 'path' => "$slug/$groupSlug",
                     'depth' => 1, 'position' => $g++, 'phase' => $phase, 'kind' => $kind, 'is_restricted' => $restricted,
@@ -91,7 +82,7 @@ class DatabaseSeeder extends Seeder
                     $leaf = Category::create([
                         'parent_id' => $group->id, 'name' => $leafName, 'slug' => $leafSlug, 'path' => "$slug/$groupSlug/$leafSlug",
                         'depth' => 2, 'position' => $l, 'phase' => $phase, 'kind' => $kind, 'is_restricted' => $restricted,
-                        'rule' => $isDeals ? $data['rules'][$leafSlug] : ($kind === 'filter' ? 'age_group:'.$leafName : null),
+                        'rule' => $isDeals ? $data['rules'][$leafSlug] : null,
                     ]);
                     $paths[$leaf->path] = $leaf;
                 }
@@ -104,13 +95,12 @@ class DatabaseSeeder extends Seeder
     private function seedSuppliers(): array
     {
         $rows = [
-            ['fashion', 'Faisalabad Textile Traders', 'Imran Sheikh', 'Faisalabad', 2, 'Exchange within 7 days for defects. No return on stitched items.'],
-            ['fashion', 'Lahore Garments Hub', 'Nadia Butt', 'Lahore', 1, 'Defective pieces replaced on next order.'],
-            ['kids', 'Little Stars Wholesale', 'Usman Tariq', 'Karachi', 3, 'Returns accepted within 5 days, unopened only.'],
-            ['bags', 'Sialkot Leather & Bags Co.', 'Kashif Mehmood', 'Sialkot', 3, 'Manufacturing defects replaced within 10 days.'],
-            ['home', 'HomeEase Importers', 'Rabia Aslam', 'Karachi', 2, 'Damaged-on-arrival items credited with photo proof.'],
-            ['electronics', 'VoltGo Distribution', 'Adeel Raza', 'Lahore', 2, '7-day replacement warranty on electronics.'],
-            ['hardware', 'FixPro Hardware Supply', 'Tahir Hussain', 'Gujranwala', 4, 'No returns on opened packs.'],
+            ['clothing', 'Faisalabad Textile Traders', 'Nadia Sheikh', 'Faisalabad', 2, 'Exchange within 7 days for defects. No return on stitched items.'],
+            ['clothing', 'Lahore Couture House', 'Sana Butt', 'Lahore', 1, 'Defective pieces replaced on next order.'],
+            ['footwear', 'Multan Khussa & Heels Co.', 'Rabia Aslam', 'Multan', 3, 'Size exchange within 7 days if unworn.'],
+            ['bags', 'Sialkot Leather & Bags Co.', 'Hina Mehmood', 'Sialkot', 3, 'Manufacturing defects replaced within 10 days.'],
+            ['jewellery-accessories', 'Hyderabad Bangles & Jewels', 'Farah Qureshi', 'Hyderabad', 2, 'Broken pieces replaced with photo proof.'],
+            ['beauty', 'GlowSource Cosmetics', 'Mehwish Raza', 'Karachi', 2, 'Sealed items only; damaged-on-arrival credited with photo proof.'],
         ];
         $bySet = [];
         foreach ($rows as [$set, $name, $contact, $city, $lead, $policy]) {
@@ -127,18 +117,16 @@ class DatabaseSeeder extends Seeder
     {
         $deptNames = collect($data['tree'])->mapWithKeys(fn ($d) => [Str::slug($d[0]) => $d[0]]);
         $brands = [
-            'fashion' => ['Noor Studio', 'UrbanLine', 'Zaroori Basics'], 'kids' => ['LittleNest', 'Zaroori Kids'],
-            'bags' => ['Carry Co.', 'Noor Studio'], 'home' => ['HomeEase', 'Zaroori Home'],
-            'electronics' => ['VoltGo', 'Zaroori Tech'], 'hardware' => ['FixPro'],
+            'clothing' => ['Noor Studio', 'Mahrukh', 'Zaroori Femme'], 'footwear' => ['Noor Studio', 'Stiletto & Co.'],
+            'bags' => ['Carry Co.', 'Noor Studio'], 'jewellery-accessories' => ['Zevar', 'Noor Studio'],
+            'beauty' => ['Glow Lab', 'Zaroori Beauty'],
         ];
         $colourPools = [
-            'women' => ['Black', 'Off White', 'Maroon', 'Teal', 'Mustard', 'Pink', 'Navy', 'Lilac', 'Olive', 'Peach', 'Beige'],
-            'men' => ['Black', 'White', 'Navy', 'Grey', 'Charcoal', 'Olive', 'Maroon', 'Beige', 'Blue'],
-            'kids' => ['Blue', 'Red', 'Yellow', 'Pink', 'Mint', 'Navy', 'Grey', 'Purple', 'Sky Blue'],
+            'clothing' => ['Black', 'Off White', 'Maroon', 'Teal', 'Mustard', 'Pink', 'Navy', 'Lilac', 'Olive', 'Peach', 'Beige'],
+            'footwear' => ['Black', 'Nude', 'Tan', 'Off White', 'Gold', 'Pink'],
             'bags' => ['Black', 'Tan', 'Brown', 'Beige', 'Maroon', 'Navy', 'Pink', 'Off White'],
-            'home' => ['White', 'Grey', 'Black', 'Beige', 'Green', 'Blue', 'Pink'],
-            'electronics' => ['Black', 'White', 'Grey', 'Blue'],
-            'hardware' => ['Steel', 'Black', 'White', 'Silver'],
+            'jewellery-accessories' => ['Gold', 'Silver', 'Rose Gold'],
+            'beauty' => ['Nude', 'Rose', 'Peach'],
         ];
 
         foreach ($data['products'] as $n => $row) {
@@ -148,43 +136,38 @@ class DatabaseSeeder extends Seeder
             $h = crc32($title);
             $pick = fn (array $pool, int $salt = 0) => $pool[($h + $salt * 7919) % count($pool)];
 
-            $set = match (true) {
-                $dept === 'kids' => 'kids',
-                $dept === 'bags-accessories', $group === 'womens-bags' => 'bags',
-                $dept === 'home-kitchen' => 'home',
-                $dept === 'electronics-gadgets' => 'electronics',
-                $dept === 'hardware-diy' => 'hardware',
+            // Filter set decides which filters the catalogue shows (config/store.php → filter_sets).
+            $set = match ($dept) {
+                'bags' => 'bags',
+                'beauty' => 'beauty',
                 default => 'fashion',
             };
-            $isClothing = in_array($group, ['womens-clothing', 'mens-clothing', 'mens-innerwear', 'private-intimate', 'boys', 'girls'], true);
+            $isClothing = $dept === 'clothing';
             $restricted = $group === 'private-intimate';
 
             // Colours
-            $pool = $colourPools[$set === 'fashion' ? $dept : $set] ?? $colourPools['home'];
-            $colours = $o['c'] ?? collect(range(0, $isClothing ? 2 + $h % 2 : $h % 3))->map(fn ($i) => $pick($pool, $i))->unique()->values()->all();
+            $pool = $colourPools[$dept];
+            $colours = $o['c'] ?? ($dept === 'beauty' ? [] : collect(range(0, $isClothing ? 2 + $h % 2 : $h % 3))->map(fn ($i) => $pick($pool, $i))->unique()->values()->all());
 
             // Sizes
-            $ages = [];
             if (array_key_exists('s', $o)) {
                 $sizes = $o['s'];
-            } elseif ($dept === 'kids') {
-                $start = $h % 4;
-                $ages = array_slice(self::AGE_GROUPS, $start, 2 + $h % 2);
-                $sizes = $isClothing ? $ages : [];
             } elseif ($leaf === 'bras') {
                 $sizes = ['32B', '34B', '36B', '38B'];
+            } elseif ($dept === 'footwear') {
+                $sizes = array_slice(['36', '37', '38', '39', '40', '41'], $h % 2, 5);
             } elseif ($isClothing) {
-                $sizes = $dept === 'men' ? ['S', 'M', 'L', 'XL', 'XXL'] : ($h % 3 === 0 ? ['XS', 'S', 'M', 'L', 'XL'] : ['S', 'M', 'L', 'XL']);
+                $sizes = $h % 3 === 0 ? ['XS', 'S', 'M', 'L', 'XL'] : ['S', 'M', 'L', 'XL'];
                 if ($h % 5 === 0) {
-                    $sizes[] = $dept === 'men' ? 'XXXL' : 'XXL';
+                    $sizes[] = 'XXL';
                 }
             } else {
                 $sizes = [];
             }
 
-            $material = $o['m'] ?? match ($set) {
-                'bags' => $pick(['Faux Leather', 'Faux Leather', 'PU Leather', 'Canvas']),
-                'electronics' => 'ABS Plastic',
+            $material = $o['m'] ?? match ($dept) {
+                'bags' => $pick(['Faux Leather', 'Faux Leather', 'PU Leather', 'Vegan Leather']),
+                'jewellery-accessories' => 'Alloy',
                 default => 'Mixed',
             };
 
@@ -192,48 +175,30 @@ class DatabaseSeeder extends Seeder
             $attrs = ['department' => $deptNames[$dept]];
             $specs = ['Material' => $material];
             switch ($set) {
-                case 'kids':
-                    $attrs += [
-                        'age_group' => $ages,
-                        'gender' => $group === 'boys' ? 'Boys' : ($group === 'girls' ? 'Girls' : 'Unisex'),
-                        'season' => in_array($material, ['Fleece', 'Polyester'], true) ? 'Winter' : $pick(['Summer', 'All Season']),
-                    ];
-                    $specs += ['Care' => 'Machine wash cold', 'Season' => $attrs['season']];
-                    break;
                 case 'bags':
                     $attrs += [
                         'bag_type' => $leafCat->name,
-                        'gender' => $dept === 'men' || str_contains($leaf, 'mens-') && ! str_contains($leaf, 'womens-') ? 'Men' : ($dept === 'women' ? 'Women' : 'Unisex'),
+                        'gender' => 'Women',
                         'occasion' => $pick(['Everyday', 'Work', 'Travel', 'Party'], 3),
                         'size' => $pick(['Small', 'Medium', 'Large'], 5),
                     ];
                     $specs += ['Closure' => $pick(['Zip', 'Magnetic snap', 'Zip'], 2), 'Size' => $attrs['size']];
                     break;
-                case 'home':
-                    $attrs += ['product_type' => $leafCat->name, 'use' => $paths["$dept/$group"]->name, 'size' => $pick(['Compact', 'Standard', 'Large'], 5)];
-                    $specs += ['Care' => 'Wipe clean or hand wash', 'Size' => $attrs['size']];
-                    break;
-                case 'electronics':
-                    $attrs += [
-                        'product_type' => $leafCat->name, 'compatibility' => $o['compat'] ?? 'Universal',
-                        'power' => $o['power'] ?? null, 'warranty' => $pick(['7-day replacement', '3 months', '6 months']),
-                    ];
-                    $specs += array_filter(['Compatibility' => $attrs['compatibility'], 'Power / capacity' => $attrs['power'], 'Warranty' => $attrs['warranty']]);
-                    break;
-                case 'hardware':
-                    $attrs += [
-                        'product_type' => $leafCat->name, 'pack_qty' => $o['pack'] ?? 'Single',
-                        'application' => $paths["$dept/$group"]->name === 'Hardware' ? $pick(['Doors & cabinets', 'Walls & shelving', 'General repair']) : $pick(['Home repair', 'Organisation', 'Installation']),
-                        'size' => $pick(['Small', 'Medium', 'Large'], 5),
-                    ];
-                    $specs += ['Pack quantity' => $attrs['pack_qty'], 'Application' => $attrs['application']];
+                case 'beauty':
+                    $attrs += ['product_type' => $leafCat->name, 'use' => $paths["$dept/$group"]->name, 'finish' => $material];
+                    $specs = ['Finish / texture' => $material, 'Suitable for' => $pick(['All skin types', 'Normal to dry skin', 'Normal to oily skin']), 'Shelf life' => '24 months unopened'];
                     break;
                 default:
-                    $specs += $isClothing ? ['Fit' => $pick(['Regular', 'Relaxed', 'Slim'], 4), 'Care' => 'Machine wash cold, do not bleach'] : [];
+                    $specs += match ($dept) {
+                        'clothing' => ['Fit' => $pick(['Regular', 'Relaxed', 'Slim'], 4), 'Care' => 'Machine wash cold, do not bleach'],
+                        'footwear' => ['Heel' => $pick(['Flat', 'Low (1 inch)', 'Mid (2 inch)'], 4), 'Care' => 'Wipe clean with a dry cloth'],
+                        'jewellery-accessories' => ['Care' => 'Keep away from water and perfume'],
+                        default => [],
+                    };
             }
 
             // Supplier stock: mostly healthy, with a few sold-out / stale / draft rows to exercise every state.
-            $supplier = $pick($suppliers[$set]);
+            $supplier = $pick($suppliers[$dept]);
             $qty = 6 + $h % 38;
             $status = 'active';
             $verified = now()->subHours($h % 30);
@@ -251,7 +216,7 @@ class DatabaseSeeder extends Seeder
                 $qty = 2 + $h % 4; // low stock
             }
 
-            $sku = 'ZR-'.strtoupper(substr(preg_replace('/[^a-z]/', '', $dept), 0, 3)).'-'.str_pad((string) ($n + 1), 4, '0', STR_PAD_LEFT);
+            $sku = 'ZR-WOM-'.str_pad((string) ($n + 1), 4, '0', STR_PAD_LEFT);
             // Reuse stand-in photos fetched earlier with `php artisan store:demo-images`.
             $photo = 'products/'.$sku.'.jpg';
 
@@ -277,7 +242,7 @@ class DatabaseSeeder extends Seeder
                 'is_restricted' => $restricted,
                 'is_bundle' => (bool) ($o['bundle'] ?? Str::contains($title, ['Pack of', 'Set of'])),
                 'is_flash' => $compare && $n % 6 === 0,
-                'brand' => $pick($brands[$set], 1),
+                'brand' => $pick($brands[$dept], 1),
                 'material' => $material,
                 'colours' => $colours,
                 'sizes' => $sizes,
@@ -285,8 +250,8 @@ class DatabaseSeeder extends Seeder
                 'specs' => $specs,
                 'included' => ['1 × '.$title],
                 'images' => ! $restricted && is_file(storage_path('app/public/'.$photo)) ? [$photo] : [],
-                'short_description' => $this->blurb($set, $title, $material),
-                'description' => $this->description($set, $title, $material),
+                'short_description' => $this->blurb($dept, $material),
+                'description' => $this->description($dept, $title, $material),
                 'sold_count' => $status === 'draft' ? 0 : 3 + $h % 140,
                 'created_at' => now()->subDays($n % 5 === 0 ? $h % 14 : 15 + $h % 90),
             ]);
@@ -299,39 +264,38 @@ class DatabaseSeeder extends Seeder
         }
     }
 
-    private function blurb(string $set, string $title, string $material): string
+    private function blurb(string $dept, string $material): string
     {
-        return match ($set) {
-            'home' => "A practical everyday helper that keeps your space tidy. Made from durable $material.",
-            'electronics' => 'Tested before dispatch and backed by our replacement promise.',
-            'hardware' => "Reliable $material hardware for quick fixes and neat installations.",
-            'bags' => "Roomy, well-finished and easy to carry — crafted in $material.",
-            'kids' => "Soft $material that is gentle on skin and made for play.",
-            default => "Comfortable $material with a clean finish, made for everyday wear.",
+        return match ($dept) {
+            'footwear' => "Cushioned, comfortable and made to be shown off — finished in $material.",
+            'bags' => "Roomy, beautifully finished and easy to carry — crafted in $material.",
+            'jewellery-accessories' => 'Lightweight, skin-friendly and gift-ready in a keepsake pouch.',
+            'beauty' => 'Dermatologically tested, cruelty-free and made for everyday glow.',
+            default => "Soft $material with a graceful drape and a clean finish, made for her.",
         };
     }
 
-    private function description(string $set, string $title, string $material): string
+    private function description(string $dept, string $title, string $material): string
     {
-        $second = match ($set) {
-            'home' => 'Designed to save space and time in a busy home. Easy to clean and built to last through daily use.',
-            'electronics' => 'Compact, dependable and simple to use. Please check the compatibility and power details before ordering.',
-            'hardware' => 'Sturdy construction for long-lasting results. Suitable for home use and light professional work.',
-            'bags' => 'Thoughtful compartments keep your essentials organised, with sturdy stitching and smooth hardware.',
-            'kids' => 'Easy to wear, easy to wash and comfortable all day. Please refer to the age group and size guide before ordering.',
+        $second = match ($dept) {
+            'footwear' => 'A padded insole and non-slip sole keep you comfortable from morning to evening. Please check the size guide before ordering.',
+            'bags' => 'Thoughtful compartments keep your essentials organised, with sturdy stitching and smooth gold-tone hardware.',
+            'jewellery-accessories' => 'Nickel-free plating that keeps its shine. Store in the pouch provided and avoid contact with water and perfume.',
+            'beauty' => 'Free from parabens and harsh fragrances. Patch test before first use and store away from direct sunlight.',
             default => 'True-to-size fit with neat stitching. Please refer to the size guide for measurements before ordering.',
         };
+        $tail = $dept === 'beauty' ? 'Shades may vary slightly due to photography and screen settings.' : 'Colours may vary slightly due to photography and screen settings.';
 
-        return "$title — made from $material and checked for quality before dispatch.\n\n$second\n\nColours may vary slightly due to photography and screen settings.";
+        return "$title — made from $material and checked for quality before dispatch.\n\n$second\n\n$tail";
     }
 
     private function seedReviews(): void
     {
-        $names = ['Ayesha K.', 'Fatima R.', 'Hira S.', 'Zainab A.', 'Maryam T.', 'Ali H.', 'Usman M.', 'Bilal Q.', 'Sara N.', 'Hamza I.', 'Noor F.', 'Kiran B.', 'Ahmed Z.', 'Mahnoor J.'];
+        $names = ['Ayesha K.', 'Fatima R.', 'Hira S.', 'Zainab A.', 'Maryam T.', 'Aleena H.', 'Iqra M.', 'Sana Q.', 'Sara N.', 'Hafsa I.', 'Noor F.', 'Kiran B.', 'Anum Z.', 'Mahnoor J.'];
         $bodies = [
-            5 => ['Exactly as shown. Quality is better than I expected for the price.', 'Delivered in three days and packed well. Will order again.', 'Very happy with this purchase, fits perfectly.', 'Good quality and the COD process was smooth.'],
-            4 => ['Nice product overall. Delivery took a day longer than expected.', 'Good value for money. Colour is slightly different from the photo.', 'Works well, happy with it.'],
-            3 => ['Product is okay. Stitching could be neater.', 'Average quality but fair for the price.'],
+            5 => ['Exactly as shown — the quality is so much better than I expected for the price.', 'Arrived in three days, beautifully packed. Already ordering another colour!', 'Absolutely love it, fits perfectly and looks elegant.', 'Gorgeous finish and the COD process was smooth. Highly recommend.'],
+            4 => ['Really pretty. Delivery took a day longer than expected.', 'Great value for money. The shade is slightly different from the photo.', 'Lovely piece, got so many compliments.'],
+            3 => ['It is nice but the stitching could be neater.', 'Decent quality and fair for the price.'],
         ];
         $cities = config('store.cities');
 
@@ -363,8 +327,32 @@ class DatabaseSeeder extends Seeder
         ] as $i => $title) {
             Banner::create(['placement' => 'announcement', 'title' => $title, 'position' => $i]);
         }
-        Banner::create(['placement' => 'hero', 'title' => 'New season, everyday prices', 'subtitle' => 'Fresh arrivals for women, men and kids — pay when your order reaches your door.', 'cta_label' => 'Shop new arrivals', 'cta_url' => '/c/deals-trending/discovery/new-arrivals', 'position' => 0]);
-        Banner::create(['placement' => 'hero', 'title' => 'Home & kitchen finds under Rs. 999', 'subtitle' => 'Smart organisers and gadgets that make daily routines easier.', 'cta_label' => 'Shop the deals', 'cta_url' => '/c/deals-trending/deals/under-rs-999', 'position' => 1]);
+        Banner::create(['placement' => 'hero', 'title' => 'The new season edit', 'subtitle' => 'Fresh suits, dresses, jewellery and beauty — pay when your order reaches your door.', 'cta_label' => 'Shop new arrivals', 'cta_url' => '/c/deals-trending/discovery/new-arrivals', 'position' => 0]);
+        Banner::create(['placement' => 'hero', 'title' => 'Beauty & jewellery under Rs. 999', 'subtitle' => 'Little luxuries for every day.', 'cta_label' => 'Shop the deals', 'cta_url' => '/c/deals-trending/deals/under-rs-999', 'position' => 1]);
+
+        // Homepage layout for the women's store (replaces the default rows from the migration).
+        HomeSection::query()->delete();
+        $sections = [
+            ['showcase', 'best', 'The edit', 'Made for her, loved by all', 'Our most-wanted pieces this season — ready to ship', 8],
+            ['categories', null, 'Shop by category', 'Find your style', null, 6],
+            ['marquee', null, null, null, null, 0],
+            ['rail', 'trending', 'Trending now', 'Most-Wanted This Week', 'What women across Pakistan are loving right now', 5],
+            ['rail', 'new', 'Just landed', 'New Arrivals', 'Fresh pieces, added every week', 5],
+            ['rail', 'dept:clothing', 'Wardrobe', 'Eastern & Western Wear', 'Suits, kurtis, dresses and co-ords', 5],
+            ['deals', null, 'Little luxuries', 'Shop by budget', null, 0],
+            ['rail', 'dept:jewellery-accessories', 'Finishing touches', 'Jewellery & Accessories', 'Jhumkas, bangles, watches and more', 5],
+            ['rail', 'dept:beauty', 'Self-care', 'The Beauty Edit', 'Makeup, skincare and fragrance you will reach for daily', 5],
+            ['rail', 'dept:bags', 'Carry it beautifully', 'Bags & Clutches', 'From everyday totes to evening clutches', 5],
+            ['rail', 'dept:footwear', 'Step out', 'Heels, Khussas & Flats', 'Comfort that looks as good as it feels', 5],
+            ['rail', 'best', 'Most ordered', 'Best Sellers', 'Tried, tested and re-ordered', 5],
+            ['reviews', null, 'Customer love', 'Loved by women across Pakistan.', null, 6],
+        ];
+        foreach ($sections as $i => [$kind, $source, $eyebrow, $title, $subtitle, $limit]) {
+            HomeSection::create([
+                'kind' => $kind, 'source' => $source, 'eyebrow' => $eyebrow, 'title' => $title, 'subtitle' => $subtitle,
+                'item_limit' => $limit, 'position' => ($i + 1) * 10, 'is_active' => true,
+            ]);
+        }
 
         Coupon::create(['code' => 'WELCOME10', 'type' => 'percent', 'value' => 10, 'min_spend' => 1500]);
         Coupon::create(['code' => 'SAVE300', 'type' => 'fixed', 'value' => 300, 'min_spend' => 3500]);
@@ -375,7 +363,7 @@ class DatabaseSeeder extends Seeder
     private function seedOrders(): void
     {
         $products = Product::general()->purchasable()->get();
-        $names = ['Ayesha Khan', 'Fatima Raza', 'Hira Saleem', 'Zainab Ahmed', 'Maryam Tariq', 'Ali Hassan', 'Usman Malik', 'Bilal Qureshi', 'Sara Naveed', 'Hamza Iqbal', 'Noor Fatima', 'Kiran Baig', 'Ahmed Zaman', 'Mahnoor Javed', 'Omar Farooq', 'Sadia Rehman'];
+        $names = ['Ayesha Khan', 'Fatima Raza', 'Hira Saleem', 'Zainab Ahmed', 'Maryam Tariq', 'Aleena Hassan', 'Iqra Malik', 'Sana Qureshi', 'Sara Naveed', 'Hafsa Iqbal', 'Noor Fatima', 'Kiran Baig', 'Anum Zaman', 'Mahnoor Javed', 'Areeba Farooq', 'Sadia Rehman'];
         $phones = collect($names)->map(fn () => '03'.mt_rand(100000000, 499999999))->all();
         $cities = array_slice(config('store.cities'), 0, 12);
         $flow = config('store.order_flow');
@@ -427,7 +415,7 @@ class DatabaseSeeder extends Seeder
                 ? array_slice($flow, 0, array_search($status, $flow, true) + 1)
                 : ($status === 'cancelled' ? ['pending', 'cancelled'] : ['pending', 'confirmed', 'packed', 'shipped', 'returned']);
             foreach ($steps as $s => $step) {
-                $order->events()->create(['status' => $step, 'created_at' => $placed->copy()->addHours($s * 14), 'by' => $s ? 'Bilal Orders' : null,
+                $order->events()->create(['status' => $step, 'created_at' => $placed->copy()->addHours($s * 14), 'by' => $s ? 'Store Admin' : null,
                     'note' => $step === 'returned' ? 'Customer refused delivery — parcel returned to origin.' : null]);
             }
 

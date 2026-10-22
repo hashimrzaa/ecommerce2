@@ -4,7 +4,8 @@
     <div class="hero relative isolate overflow-hidden rounded-[2rem] text-white" x-data="dealTabs({{ $deals->count() }})"
         @mouseenter="paused = true" @mouseleave="paused = false" @focusin="paused = true" @focusout="paused = false" data-reveal>
         <div class="hero-grid absolute inset-0 -z-10" aria-hidden="true"></div>
-        <div class="glow absolute -top-24 -right-10 -z-10 size-96 bg-accent/40" aria-hidden="true"></div>
+        <div class="bloom absolute -top-24 -right-10 -z-10 size-96 bg-accent/40" aria-hidden="true"></div>
+        <div class="bloom bloom-2 absolute -bottom-28 left-1/3 -z-10 size-80 bg-gold/15" aria-hidden="true"></div>
 
         <div class="grid lg:grid-cols-[20rem_minmax(0,1fr)]">
             {{-- Deal list --}}

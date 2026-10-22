@@ -20,7 +20,8 @@
     $swatches = config('store.swatches');
     $colours = $product->colours ?? [];
     $sizes = $product->sizes ?? [];
-    $showSizeGuide = $sizes && in_array($product->filter_set, ['fashion', 'kids'], true);
+    // The size chart lists letter sizes, so shoes (36–41) and cup sizes do not get it.
+    $showSizeGuide = (bool) array_intersect($sizes, ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']) || ($sizes && $product->filter_set === 'kids');
     // "Find my size" works for letter sizes (XS–XXXL) and for kids' age sizes.
     $fitKind = match (true) {
         ! $sizes => null,

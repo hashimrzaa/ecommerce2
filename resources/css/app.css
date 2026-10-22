@@ -12,23 +12,26 @@
     --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
     --font-display: 'Bricolage Grotesque', 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-    --color-primary: #0b6b4f;
-    --color-primary-hover: #095a43;
-    --color-primary-soft: #e7f3ef;
+    /* Boutique palette: berry rose on warm ivory, deep plum for dark stages, blush highlights. */
+    --color-primary: #a3195b;
+    --color-primary-hover: #87124a;
+    --color-primary-soft: #fcebf2;
 
-    --color-accent: #c2410c;
-    --color-accent-soft: #fff1e7;
+    --color-accent: #e0526d;
+    --color-accent-soft: #fdecef;
 
-    --color-ink: #0d1412;
-    --color-night: #08100d;
-    --color-lime: #c9f66b;
-    --color-ink-2: #36403c;
-    --color-muted: #68716d;
-    --color-line: #e6e7e2;
-    --color-line-strong: #d0d3cd;
+    --color-ink: #26131f;
+    --color-night: #2a0f22;
+    /* "lime" is the highlight colour used on dark stages: here a soft blush. */
+    --color-lime: #f7c6d3;
+    --color-gold: #c9a26b;
+    --color-ink-2: #4e3946;
+    --color-muted: #86707c;
+    --color-line: #f0e3e7;
+    --color-line-strong: #e2cdd4;
     --color-surface: #ffffff;
-    --color-canvas: #f5f5f1;
-    --color-sunken: #eeefea;
+    --color-canvas: #fdf8f6;
+    --color-sunken: #f8eef0;
 
     --color-success: #15803d;
     --color-success-soft: #e8f6ed;
@@ -39,13 +42,13 @@
     --color-info: #1d4ed8;
     --color-info-soft: #e8effd;
 
-    --radius-card: 1.25rem;
-    --radius-control: 0.75rem;
+    --radius-card: 1.5rem;
+    --radius-control: 0.875rem;
 
-    /* Material-style elevation levels */
-    --shadow-e1: 0 1px 2px rgb(17 24 39 / 0.06), 0 1px 3px rgb(17 24 39 / 0.08);
-    --shadow-e2: 0 2px 4px rgb(17 24 39 / 0.06), 0 4px 12px rgb(17 24 39 / 0.08);
-    --shadow-e3: 0 8px 16px rgb(17 24 39 / 0.08), 0 16px 40px rgb(17 24 39 / 0.12);
+    /* Soft, plum-tinted elevation levels */
+    --shadow-e1: 0 1px 2px rgb(42 15 34 / 0.05), 0 1px 3px rgb(42 15 34 / 0.07);
+    --shadow-e2: 0 2px 4px rgb(42 15 34 / 0.05), 0 6px 16px rgb(42 15 34 / 0.08);
+    --shadow-e3: 0 10px 20px rgb(42 15 34 / 0.08), 0 20px 48px rgb(42 15 34 / 0.14);
 
     --animate-fade-in: fade-in 180ms ease-out;
     --animate-slide-up: slide-up 220ms cubic-bezier(0.2, 0, 0, 1);
@@ -95,6 +98,10 @@
         @apply font-display tracking-[-0.025em];
         text-wrap: balance;
     }
+    ::selection {
+        background: var(--color-lime);
+        color: var(--color-night);
+    }
     button, [role='button'], summary, select, label[for], input[type='checkbox'], input[type='radio'] {
         cursor: pointer;
     }
@@ -135,7 +142,20 @@
         @apply cursor-not-allowed opacity-50;
     }
     .btn-primary {
-        @apply bg-primary text-white shadow-e1 hover:bg-primary-hover active:bg-primary-hover;
+        @apply relative overflow-hidden bg-primary text-white shadow-e1 hover:bg-primary-hover active:bg-primary-hover;
+    }
+    /* A soft sheen sweeps across the main action on hover (transform only, so it never janks). */
+    .btn-primary::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.28) 50%, transparent 65%);
+        transform: translateX(-120%);
+        transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+        pointer-events: none;
+    }
+    .btn-primary:hover::after {
+        transform: translateX(120%);
     }
     .btn-dark {
         @apply bg-ink text-white hover:bg-ink-2;
@@ -356,21 +376,108 @@ button[aria-busy='true'] {
     transform: scaleX(1);
 }
 
-/* Dark stage used by the showcase and promo panels */
+/* Dark stage used by the showcase and promo panels: plum velvet lit with rose and champagne */
 .hero {
     background:
-        radial-gradient(90% 70% at 85% 10%, rgb(11 107 79 / 0.55), transparent 60%),
-        radial-gradient(60% 60% at 0% 100%, rgb(201 246 107 / 0.13), transparent 65%),
+        radial-gradient(90% 70% at 85% 10%, rgb(163 25 91 / 0.55), transparent 60%),
+        radial-gradient(60% 60% at 0% 100%, rgb(201 162 107 / 0.18), transparent 65%),
         var(--color-night);
 }
+/* Fine diamond lattice, faded towards the edges */
 .hero-grid {
-    background-image: linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px);
-    background-size: 3.5rem 3.5rem;
+    background-image:
+        linear-gradient(45deg, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+        linear-gradient(-45deg, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+    background-size: 2.75rem 2.75rem;
     mask-image: radial-gradient(75% 75% at 60% 40%, #000 20%, transparent 100%);
 }
 .glow {
     border-radius: 9999px;
     filter: blur(70px);
+}
+/* Slowly drifting light blooms on dark stages; transform-only so they cost nothing to animate. */
+.bloom {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(60px);
+    pointer-events: none;
+    animation: bloom-drift 18s ease-in-out infinite alternate;
+    will-change: transform;
+}
+.bloom-2 {
+    animation-duration: 23s;
+    animation-delay: -7s;
+}
+@keyframes bloom-drift {
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(6%, -8%, 0) scale(1.15); }
+    100% { transform: translate3d(-5%, 6%, 0) scale(0.95); }
+}
+/* Tiny sparkles that twinkle over the hero */
+.sparkle {
+    position: absolute;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--color-lime);
+    clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+    opacity: 0;
+    pointer-events: none;
+    animation: twinkle 4.5s ease-in-out infinite;
+}
+@keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+    50% { opacity: 0.9; transform: scale(1) rotate(45deg); }
+}
+.sparkle-rose {
+    background: var(--color-primary);
+}
+/* Light hero stage: blush silk with warm light */
+.hero-light {
+    background:
+        radial-gradient(70% 60% at 82% 18%, rgb(247 198 211 / 0.55), transparent 62%),
+        radial-gradient(55% 55% at 6% 96%, rgb(201 162 107 / 0.16), transparent 62%),
+        linear-gradient(180deg, #fff4f7 0%, var(--color-canvas) 100%);
+}
+.hero-light .showcase-card {
+    border-radius: 999px 999px 1.5rem 1.5rem;
+    border: 4px solid #fff;
+    background: var(--color-sunken);
+    box-shadow: 0 2.5rem 4.5rem -1.75rem rgb(42 15 34 / 0.45), 0 0 0 1px rgb(42 15 34 / 0.06);
+}
+.hero-light .showcase-card[aria-hidden='false'] {
+    box-shadow: 0 3rem 5.5rem -1.75rem rgb(163 25 91 / 0.5), 0 0 0 2px var(--color-primary);
+}
+/* Petal: product photo frame with one sweeping corner */
+.petal {
+    border-radius: 3.5rem 1.5rem 1.5rem 1.5rem;
+}
+/* Ornamental divider under centred section headings: line — diamond — line */
+.flourish {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    color: var(--color-gold);
+}
+.flourish::before,
+.flourish::after {
+    content: '';
+    width: 3rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, currentColor);
+}
+.flourish::after {
+    transform: scaleX(-1);
+}
+.flourish > span {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: currentColor;
+    transform: rotate(45deg);
+}
+/* Arch: the boutique window shape used for category tiles */
+.arch {
+    border-radius: 999px 999px 1.25rem 1.25rem;
 }
 
 /*
