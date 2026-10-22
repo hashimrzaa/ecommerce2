@@ -64,6 +64,8 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA')
                     ?: (! in_array(env('DB_HOST', '127.0.0.1'), ['127.0.0.1', 'localhost'], true) && is_file(database_path('ca.pem')) ? database_path('ca.pem') : null),
+                // Reuse the encrypted connection across requests on a warm server instead of a new TLS handshake each time.
+                PDO::ATTR_PERSISTENT => (bool) env('DB_PERSISTENT', false),
             ]) : [],
         ],
 

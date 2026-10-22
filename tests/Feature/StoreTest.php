@@ -27,7 +27,7 @@ class StoreTest extends TestCase
 
     public function test_storefront_pages_load(): void
     {
-        foreach (['/', '/shop', '/c/women', '/c/kids/age-groups/3-5-years', '/c/deals-trending/deals/under-rs-499', '/search?q=bag', '/cart', '/track-order', '/faqs', '/login'] as $url) {
+        foreach (['/', '/shop', '/c/clothing', '/c/beauty/makeup/lips', '/c/footwear', '/c/deals-trending/deals/under-rs-499', '/search?q=bag', '/cart', '/track-order', '/faqs', '/login'] as $url) {
             $this->get($url)->assertOk();
         }
         $this->get($this->sellable()->url)->assertOk()->assertSee('Add to Cart');
@@ -35,7 +35,7 @@ class StoreTest extends TestCase
 
     public function test_every_category_from_the_spec_has_a_page(): void
     {
-        $this->assertSame(8, Category::where('depth', 0)->count());
+        $this->assertSame(6, Category::where('depth', 0)->count());
         Category::where('is_restricted', false)->where('depth', '<', 2)->get()
             ->each(fn ($category) => $this->get($category->url)->assertOk());
     }
@@ -44,13 +44,13 @@ class StoreTest extends TestCase
     {
         $restricted = Product::where('is_restricted', true)->firstOrFail();
 
-        $this->get('/c/women/private-intimate')->assertOk()->assertSee('Are you 18 years or older?')->assertDontSee($restricted->title);
+        $this->get('/c/clothing/private-intimate')->assertOk()->assertSee('Are you 18 years or older?')->assertDontSee($restricted->title);
         $this->get($restricted->url)->assertSee('Are you 18 years or older?');
-        $this->get('/c/women')->assertDontSee($restricted->title);
+        $this->get('/c/clothing')->assertDontSee($restricted->title);
         $this->get('/search?q='.urlencode($restricted->title))->assertDontSee($restricted->sku);
 
-        $this->post('/age-confirm', ['answer' => 'yes', 'intended' => url('/c/women/private-intimate')])->assertRedirect('/c/women/private-intimate');
-        $this->get('/c/women/private-intimate')->assertOk()->assertDontSee('Are you 18 years or older?');
+        $this->post('/age-confirm', ['answer' => 'yes', 'intended' => url('/c/clothing/private-intimate')])->assertRedirect('/c/clothing/private-intimate');
+        $this->get('/c/clothing/private-intimate')->assertOk()->assertDontSee('Are you 18 years or older?');
     }
 
     public function test_product_with_unverified_supplier_stock_cannot_be_ordered(): void
@@ -106,7 +106,7 @@ class StoreTest extends TestCase
         $this->get('/admin')->assertRedirect('/login');
         $this->actingAs(User::where('role', 'customer')->first())->get('/admin')->assertForbidden();
 
-        $desk = User::where('role', 'orders')->first();
+        $desk = User::factory()->create(['role' => 'orders', 'is_active' => true]);
         $this->actingAs($desk)->get('/admin/orders')->assertOk();
         $this->actingAs($desk)->get('/admin/products')->assertForbidden();
         $this->actingAs($desk)->get('/admin/staff')->assertForbidden();
@@ -161,19 +161,19 @@ class StoreTest extends TestCase
     public function test_admin_can_add_and_rename_categories_but_not_delete_them(): void
     {
         $owner = User::where('role', 'owner')->first();
-        $women = Category::where('path', 'women')->first();
-        $group = Category::where('path', 'women/womens-clothing')->first();
+        $women = Category::where('path', 'clothing')->first();
+        $group = Category::where('path', 'clothing/western-wear')->first();
 
-        $this->actingAs($owner)->post('/admin/categories', ['name' => 'Footwear', 'icon' => 'footprints'])->assertSessionHasNoErrors();
-        $this->actingAs($owner)->post('/admin/categories', ['name' => 'Co-ord Sets', 'parent_id' => $group->id])->assertSessionHasNoErrors();
-        $this->assertDatabaseHas('categories', ['path' => 'footwear', 'depth' => 0, 'icon' => 'footprints']);
-        $this->assertDatabaseHas('categories', ['path' => 'women/womens-clothing/co-ord-sets', 'depth' => 2]);
-        $this->get('/c/women/womens-clothing/co-ord-sets')->assertOk();
+        $this->actingAs($owner)->post('/admin/categories', ['name' => 'Bridal', 'icon' => 'gem'])->assertSessionHasNoErrors();
+        $this->actingAs($owner)->post('/admin/categories', ['name' => 'Jumpsuits', 'parent_id' => $group->id])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('categories', ['path' => 'bridal', 'depth' => 0, 'icon' => 'gem']);
+        $this->assertDatabaseHas('categories', ['path' => 'clothing/western-wear/jumpsuits', 'depth' => 2]);
+        $this->get('/c/clothing/western-wear/jumpsuits')->assertOk();
 
         // Renaming keeps the address.
         $this->actingAs($owner)->patch('/admin/categories/'.$women->id, ['name' => 'Ladies'])->assertSessionHasNoErrors();
-        $this->assertSame('women', $women->fresh()->path);
-        $this->get('/c/women')->assertOk()->assertSee('Ladies');
+        $this->assertSame('clothing', $women->fresh()->path);
+        $this->get('/c/clothing')->assertOk()->assertSee('Ladies');
 
         $this->actingAs($owner)->delete('/admin/categories/'.$women->id)->assertStatus(405);
     }

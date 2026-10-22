@@ -19,7 +19,7 @@
             @foreach ($items as $i => $product)
                 <a href="{{ $product->url }}" class="showcase-card" :style="card({{ $i }})" @click="pick({{ $i }}, $event)" draggable="false"
                     :aria-hidden="(active !== {{ $i }}).toString()" :tabindex="active === {{ $i }} ? 0 : -1" aria-label="{{ $product->title }}, {{ money($product->price) }}">
-                    <x-product-image :product="$product" :eager="$i < 3" :full="true" draggable="false" />
+                    <x-product-image :product="$product" :eager="$i < 3" :full="true" draggable="false" :fetchpriority="$i === 0 ? 'high' : 'auto'" />
                     <span class="absolute inset-0 bg-linear-to-t from-night/80 via-night/5 to-transparent" aria-hidden="true"></span>
                     @if ($product->on_sale)<span class="badge absolute bottom-16 left-1/2 -translate-x-1/2 bg-accent text-white">−{{ $product->discount_pct }}%</span>@endif
                     <span class="absolute inset-x-4 bottom-4 flex flex-col items-center gap-1.5 text-center text-white">

@@ -204,7 +204,7 @@ class Product extends Model
 
     public static function thumbPath(string $image): string
     {
-        return dirname($image).'/thumbs/'.pathinfo($image, PATHINFO_FILENAME).'.jpg';
+        return dirname($image).'/thumbs/'.pathinfo($image, PATHINFO_FILENAME).'.webp';
     }
 
     /** Write a 560×700 JPEG next to an uploaded photo so listings do not download full-size images. */
@@ -225,7 +225,8 @@ class Product extends Model
         imagecopyresampled($dst, $src, 0, 0, (int) (($w - $cw) / 2), (int) (($h - $ch) / 2), $tw, $th, $cw, $ch);
         $target = storage_path('app/public/'.self::thumbPath($image));
         @mkdir(dirname($target), 0775, true);
-        $ok = imagejpeg($dst, $target, 78);
+        // WebP is about half the size of JPEG at the same quality; without it the full photo is used instead.
+        $ok = function_exists('imagewebp') && imagewebp($dst, $target, 80);
         imagedestroy($src);
         imagedestroy($dst);
 
