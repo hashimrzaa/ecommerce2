@@ -136,6 +136,7 @@
                             @endif
                         </div>
                     @else
+                        <h2 class="sr-only">Products</h2>
                         <ul class="results-grid mt-3 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4 lg:gap-x-5 lg:gap-y-9">
                             @foreach ($products as $product)
                                 <li><x-product-card :product="$product" class="h-full" /></li>

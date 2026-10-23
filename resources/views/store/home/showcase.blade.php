@@ -25,7 +25,7 @@
                     $first = "transform: translateX(calc($d * var(--step))) translateZ(calc($a * var(--depth))) rotateY(".($d * -30).'deg); opacity: '.($a > 2 ? 0 : 1 - $a * 0.22).'; z-index: '.(10 - $a).($a > 2 ? '; pointer-events: none' : '');
                 @endphp
                 <a href="{{ $product->url }}" class="showcase-card" style="{{ $first }}" :style="card({{ $i }})" @click="pick({{ $i }}, $event)" draggable="false"
-                    :aria-hidden="(active !== {{ $i }}).toString()" :tabindex="active === {{ $i }} ? 0 : -1" aria-label="{{ $product->title }}, {{ money($product->price) }}">
+                    :aria-hidden="(active !== {{ $i }}).toString()" :tabindex="active === {{ $i }} ? 0 : -1">
                     {{-- The 560×700 listing photo is sharp at this card size and a fraction of the full photo's weight --}}
                     <x-product-image :product="$product" :eager="$a <= 2" draggable="false" :fetchpriority="$i === 0 ? 'high' : 'auto'" />
                     <span class="absolute inset-0 bg-linear-to-t from-night/80 via-night/5 to-transparent" aria-hidden="true"></span>

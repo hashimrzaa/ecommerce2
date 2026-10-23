@@ -26,7 +26,7 @@
     --color-lime: #f7c6d3;
     --color-gold: #c9a26b;
     --color-ink-2: #4e3946;
-    --color-muted: #86707c;
+    --color-muted: #79636f; /* 4.5:1 or better on canvas, surface and sunken */
     --color-line: #f0e3e7;
     --color-line-strong: #e2cdd4;
     --color-surface: #ffffff;
