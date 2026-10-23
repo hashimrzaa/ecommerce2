@@ -20,10 +20,10 @@ if (! function_exists('wa_link')) {
 }
 
 if (! function_exists('normalize_phone')) {
-    /** Normalise Pakistani mobile numbers to 03XXXXXXXXX. */
-    function normalize_phone(?string $phone): string
+    /** Normalise Pakistani mobile numbers to 03XXXXXXXXX. Anything but text (a tampered `phone[]=`) gives ''. */
+    function normalize_phone(mixed $phone): string
     {
-        $digits = preg_replace('/\D/', '', (string) $phone);
+        $digits = preg_replace('/\D/', '', is_scalar($phone) ? (string) $phone : '');
         if (str_starts_with($digits, '0092')) {
             $digits = substr($digits, 4);
         } elseif (str_starts_with($digits, '92') && strlen($digits) === 12) {

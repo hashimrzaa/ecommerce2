@@ -13,13 +13,13 @@
     foreach ($selected as $key => $values) {
         foreach ($values as $value) { $chips[] = [config("store.filter_labels.$key").': '.$value, "f[$key][]", $value]; }
     }
-    if (request('min') || request('max')) {
-        $chips[] = ['Price: '.money(request('min') ?: $priceRange[0]).' – '.money(request('max') ?: $priceRange[1]), 'price', null];
+    if ($min || $max) {
+        $chips[] = [$max && ! $min ? 'Under '.money($max) : ($min && ! $max ? money($min).' & above' : money($min).' – '.money($max)), 'price', null];
     }
     foreach (['in_stock' => 'In stock', 'on_sale' => 'On sale', 'new' => 'New arrivals'] as $flag => $label) {
         if (request()->boolean($flag)) { $chips[] = [$label, $flag, null]; }
     }
-    if (request('rating')) { $chips[] = [request('rating').' stars & up', 'rating', null]; }
+    if ($rating) { $chips[] = [$rating.' stars & up', 'rating', null]; }
 @endphp
 
 @section('content')

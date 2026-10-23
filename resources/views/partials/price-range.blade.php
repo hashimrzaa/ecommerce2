@@ -1,10 +1,10 @@
 {{-- Two-thumb price slider. The values are only sent when the shopper actually narrows the range. --}}
-<div x-data="priceRange({{ $priceRange[0] }}, {{ $priceRange[1] }}, {{ request('min') ? (int) request('min') : 'null' }}, {{ request('max') ? (int) request('max') : 'null' }})"
+<div x-data="priceRange({{ $priceRange[0] }}, {{ $priceRange[1] }}, {{ $min ?? 'null' }}, {{ $max ?? 'null' }})"
     @price-reset.window="lo = floor; hi = ceil">
     <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
-        <p class="rounded-control bg-sunken px-3 py-2"><span class="block text-[0.6875rem] text-muted">From</span><span class="font-semibold tabular-nums" x-text="'Rs. ' + Number(lo).toLocaleString('en-PK')">{{ money(request('min') ?: $priceRange[0]) }}</span></p>
+        <p class="rounded-control bg-sunken px-3 py-2"><span class="block text-[0.6875rem] text-muted">From</span><span class="font-semibold tabular-nums" x-text="'Rs. ' + Number(lo).toLocaleString('en-PK')">{{ money($min ?: $priceRange[0]) }}</span></p>
         <span class="text-muted" aria-hidden="true">–</span>
-        <p class="rounded-control bg-sunken px-3 py-2"><span class="block text-[0.6875rem] text-muted">To</span><span class="font-semibold tabular-nums" x-text="'Rs. ' + Number(hi).toLocaleString('en-PK')">{{ money(request('max') ?: $priceRange[1]) }}</span></p>
+        <p class="rounded-control bg-sunken px-3 py-2"><span class="block text-[0.6875rem] text-muted">To</span><span class="font-semibold tabular-nums" x-text="'Rs. ' + Number(hi).toLocaleString('en-PK')">{{ money($max ?: $priceRange[1]) }}</span></p>
     </div>
     <div class="range-dual mt-4">
         <div class="range-dual-fill" :style="`left: ${left}%; right: ${right}%`"></div>

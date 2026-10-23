@@ -119,12 +119,14 @@ class CheckoutController extends Controller
     {
         $order = null;
         $notFound = false;
-        if ($request->filled(['number', 'phone'])) {
-            $order = Order::where('number', strtoupper(trim($request->query('number'))))
-                ->where('phone', normalize_phone($request->query('phone')))->with(['items.product', 'events'])->first();
+        // Plain text only: a tampered `number[]=` link must show the empty form, not a server error.
+        [$number, $phone] = array_map(fn ($v) => is_string($v) ? trim($v) : '', [$request->query('number'), $request->query('phone')]);
+        if ($number !== '' && $phone !== '') {
+            $order = Order::where('number', strtoupper($number))
+                ->where('phone', normalize_phone($phone))->with(['items.product', 'events'])->first();
             $notFound = ! $order;
         }
 
-        return view('store.track', compact('order', 'notFound'));
+        return view('store.track', compact('order', 'notFound', 'number', 'phone'));
     }
 }

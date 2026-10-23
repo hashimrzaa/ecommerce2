@@ -89,7 +89,8 @@ return [
         'home' => ['product_type', 'material', 'size', 'colour', 'use'],
         'electronics' => ['product_type', 'brand', 'compatibility', 'power', 'warranty'],
         'hardware' => ['product_type', 'material', 'size', 'pack_qty', 'application'],
-        'all' => ['department'],
+        // Search and Shop All mix departments: the department narrows first, then what every department shares.
+        'all' => ['department', 'size', 'colour', 'brand'],
     ],
 
     'swatches' => [

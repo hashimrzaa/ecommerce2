@@ -33,6 +33,16 @@ class StoreTest extends TestCase
         $this->get($this->sellable()->url)->assertOk()->assertSee('Add to Cart');
     }
 
+    public function test_tampered_query_strings_do_not_break_pages(): void
+    {
+        foreach (['/search?q[]=a', '/c/clothing?sort[]=a', '/c/clothing?min[]=1&max=abc&rating=99', '/search/suggest?q[]=a',
+            '/track-order?number[]=a&phone=1', '/track-order?number=a&phone[]=1'] as $url) {
+            $this->get($url)->assertOk();
+        }
+        // Reversed or out-of-range prices are turned into a sensible range instead of an impossible one.
+        $this->get('/c/bags?min=999999')->assertOk()->assertDontSee('999,999');
+    }
+
     public function test_every_category_from_the_spec_has_a_page(): void
     {
         $this->assertSame(6, Category::where('depth', 0)->count());

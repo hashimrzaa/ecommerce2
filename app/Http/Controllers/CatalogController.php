@@ -24,9 +24,15 @@ class CatalogController extends Controller
 
     public function search(Request $request)
     {
-        $q = trim((string) $request->query('q'));
+        return $this->listing($request, null, mb_substr(self::text($request, 'q'), 0, 80));
+    }
 
-        return $this->listing($request, null, mb_substr($q, 0, 80));
+    /** A query-string value as trimmed text. Bots send `?q[]=…`, which must not become a server error. */
+    private static function text(Request $request, string $key): string
+    {
+        $value = $request->query($key);
+
+        return is_string($value) ? trim($value) : '';
     }
 
     public function category(Request $request, string $path)
@@ -45,7 +51,7 @@ class CatalogController extends Controller
     /** Autocomplete for the header search (spec §11 utility features). */
     public function suggest(Request $request)
     {
-        $q = trim((string) $request->query('q'));
+        $q = self::text($request, 'q');
         if (mb_strlen($q) < 2) {
             return response()->json(['products' => [], 'categories' => []]);
         }
@@ -116,16 +122,27 @@ class CatalogController extends Controller
         foreach ($selected as $key => $values) {
             $query->whereHas('attributeValues', fn ($a) => $a->where('key', $key)->whereIn('value', $values));
         }
-        $min = $request->integer('min') ?: null;
-        $max = $request->integer('max') ?: null;
+        // Price bounds are kept inside this listing's range (an old link may carry one from another category),
+        // and a bound at the edge of the range narrows nothing, so it is dropped.
+        [$min, $max] = [self::text($request, 'min'), self::text($request, 'max')];
+        $min = ctype_digit($min) ? (int) $min : null;
+        $max = ctype_digit($max) ? (int) $max : null;
+        if ($min !== null && $max !== null && $min > $max) {
+            [$min, $max] = [$max, $min];
+        }
+        $min = $min !== null && $min > $priceRange[0] ? min($min, $priceRange[1]) : null;
+        $max = $max !== null && $max < $priceRange[1] ? max($max, $priceRange[0]) : null;
+        $rating = in_array($request->integer('rating'), [3, 4], true) ? $request->integer('rating') : null;
+
         $query->when($min, fn ($w) => $w->where('price', '>=', $min))
             ->when($max, fn ($w) => $w->where('price', '<=', $max))
             ->when($request->boolean('in_stock'), fn ($w) => $w->purchasable())
             ->when($request->boolean('on_sale'), fn ($w) => $w->whereColumn('compare_at_price', '>', 'price'))
             ->when($request->boolean('new'), fn ($w) => $w->where('created_at', '>=', now()->subDays(21)))
-            ->when($request->integer('rating'), fn ($w, $r) => $w->where('rating_avg', '>=', min($r, 5)));
+            ->when($rating, fn ($w) => $w->where('rating_avg', '>=', $rating));
 
-        $sort = array_key_exists($request->query('sort'), self::SORTS) ? $request->query('sort') : $this->defaultSort($category);
+        $sort = self::text($request, 'sort');
+        $sort = array_key_exists($sort, self::SORTS) ? $sort : $this->defaultSort($category);
         match ($sort) {
             'newest' => $query->latest(),
             'best' => $query->orderByDesc('sold_count'),
@@ -137,8 +154,10 @@ class CatalogController extends Controller
 
         $products = $query->orderBy('id')->paginate(24)->withQueryString();
 
-        $activeCount = $selected->flatten()->count() + ($min ? 1 : 0) + ($max ? 1 : 0)
-            + collect(['in_stock', 'on_sale', 'new', 'rating'])->filter(fn ($k) => $request->filled($k))->count();
+        // Counted the same way the chips are drawn: the price range is one filter, whichever ends were moved.
+        $activeCount = $selected->flatten()->count() + ($min || $max ? 1 : 0) + ($rating ? 1 : 0)
+            + collect(['in_stock', 'on_sale', 'new'])->filter(fn ($k) => $request->boolean($k))->count();
+        $showPopular = $q !== null && ($q === '' || $products->isEmpty());
 
         return view('store.catalog', [
             'category' => $category,
@@ -150,13 +169,16 @@ class CatalogController extends Controller
             'facets' => $facets,
             'selected' => $selected,
             'priceRange' => $priceRange,
+            'min' => $min,
+            'max' => $max,
+            'rating' => $rating,
             'sorts' => self::SORTS,
             'sort' => $sort,
             'activeCount' => $activeCount,
             'showFashionToggles' => in_array($set, ['fashion', 'all'], true),
             'suggested' => $products->isEmpty() || $q === ''
                 ? Product::general()->purchasable()->orderByDesc('sold_count')->limit(10)->get() : collect(),
-            'popular' => $q !== null ? Category::where('depth', 2)->where('kind', 'normal')->where('is_visible', true)->where('is_restricted', false)
+            'popular' => $showPopular ? Category::where('depth', 2)->where('kind', 'normal')->where('is_visible', true)->where('is_restricted', false)
                 ->withCount('products')->orderByDesc('products_count')->limit(10)->get() : collect(),
             'title' => $q !== null ? ($q === '' ? 'Search' : "Results for “{$q}”") : ($category?->name ?? 'Shop All'),
         ]);

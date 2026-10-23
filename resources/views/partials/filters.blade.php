@@ -76,12 +76,12 @@
 @endforeach
 
 {{-- Rating --}}
-<fieldset class="filter-group" x-data="{ open: {{ request('rating') ? 'true' : 'false' }} }">
+<fieldset class="filter-group" x-data="{ open: {{ $rating ? 'true' : 'false' }} }">
     <legend><button type="button" @click="open = !open" :aria-expanded="open.toString()">Customer rating <x-lucide-chevron-down class="size-4 text-muted transition-transform" ::class="open && 'rotate-180'" aria-hidden="true" /></button></legend>
     <div x-show="open" x-collapse>
         @foreach ([4, 3] as $stars)
             <label class="check-row">
-                <input type="radio" name="rating" value="{{ $stars }}" class="peer sr-only" @checked(request()->integer('rating') === $stars)>
+                <input type="radio" name="rating" value="{{ $stars }}" class="peer sr-only" @checked($rating === $stars)>
                 <span class="check-box rounded-full" aria-hidden="true"><x-lucide-check class="size-3" stroke-width="3.5" /></span>
                 <x-rating :value="$stars" size="size-4" /><span>&amp; up</span>
             </label>

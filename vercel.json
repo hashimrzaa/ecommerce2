@@ -28,7 +28,7 @@
         "CACHE_STORE": "file",
         "CACHE_FILE_PATH": "/tmp/cache",
         "QUEUE_CONNECTION": "sync",
-        "DB_PERSISTENT": "true",
+        "DB_PERSISTENT": "false",
         "STOCK_STALE_HOURS": "0",
         "VIEW_COMPILED_PATH": "/tmp/views",
         "APP_CONFIG_CACHE": "/tmp/config.php",

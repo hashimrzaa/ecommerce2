@@ -14,11 +14,11 @@
         <form method="get" action="{{ route('track') }}" class="card mx-auto mt-6 grid max-w-xl gap-4 p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end sm:p-6">
             <div>
                 <label for="number" class="label">Order number</label>
-                <input id="number" name="number" value="{{ request('number') }}" class="field uppercase placeholder:normal-case" placeholder="ZR-10001" required>
+                <input id="number" name="number" value="{{ $number }}" class="field uppercase placeholder:normal-case" placeholder="ZR-10001" required>
             </div>
             <div>
                 <label for="phone" class="label">Mobile number</label>
-                <input id="phone" name="phone" type="tel" inputmode="tel" value="{{ request('phone') }}" class="field" placeholder="0300 1234567" required autocomplete="tel">
+                <input id="phone" name="phone" type="tel" inputmode="tel" value="{{ $phone }}" class="field" placeholder="0300 1234567" required autocomplete="tel">
             </div>
             <button class="btn btn-primary">Track</button>
         </form>

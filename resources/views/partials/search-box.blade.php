@@ -1,6 +1,6 @@
 {{-- Search with recent searches, trending terms and live results. $sid keeps ids unique (desktop / mobile). --}}
 <form action="{{ route('search') }}" role="search" class="relative"
-    x-data="searchBox('{{ route('search.suggest') }}', @js(request()->routeIs('search') ? (string) request('q') : ''))"
+    x-data="searchBox('{{ route('search.suggest') }}', @js(request()->routeIs('search') ? (is_string(request('q')) ? request('q') : '') : ''))"
     @submit="submit($event)" @click.outside="open = false" @keydown.escape="open = false; $refs.input.blur()">
     <label for="search-{{ $sid }}" class="sr-only">Search products</label>
     <div class="flex h-12 items-center rounded-full border-2 bg-sunken pl-4 transition-colors" :class="open ? 'border-night bg-surface' : 'border-transparent'">
