@@ -110,18 +110,14 @@ class CatalogController extends Controller
             $this->matching($base, $q);
         }
 
-        // Facets are computed on the unfiltered set so options never disappear while refining.
-        $baseIds = (clone $base)->pluck('products.id');
+        // Facet options come from the unfiltered set so they never disappear while refining.
         $keys = config("store.filter_sets.$set");
-        $facets = $this->facets($baseIds, $keys);
+        $facets = $this->facets((clone $base)->select('products.id'), $keys);
         $bounds = (clone $base)->toBase()->selectRaw('MIN(price) AS lo, MAX(price) AS hi')->first();
         $priceRange = [(int) $bounds?->lo, (int) $bounds?->hi];
 
         $query = clone $base;
         $selected = collect($request->query('f', []))->only($keys)->map(fn ($v) => array_values(array_filter((array) $v, 'is_string')))->filter();
-        foreach ($selected as $key => $values) {
-            $query->whereHas('attributeValues', fn ($a) => $a->where('key', $key)->whereIn('value', $values));
-        }
         // Price bounds are kept inside this listing's range (an old link may carry one from another category),
         // and a bound at the edge of the range narrows nothing, so it is dropped.
         [$min, $max] = [self::text($request, 'min'), self::text($request, 'max')];
@@ -140,6 +136,8 @@ class CatalogController extends Controller
             ->when($request->boolean('on_sale'), fn ($w) => $w->whereColumn('compare_at_price', '>', 'price'))
             ->when($request->boolean('new'), fn ($w) => $w->where('created_at', '>=', now()->subDays(21)))
             ->when($rating, fn ($w) => $w->where('rating_avg', '>=', $rating));
+        $counts = $this->facetCounts($query, $selected, $keys);
+        $this->applyFacets($query, $selected);
 
         $sort = self::text($request, 'sort');
         $sort = array_key_exists($sort, self::SORTS) ? $sort : $this->defaultSort($category);
@@ -167,6 +165,7 @@ class CatalogController extends Controller
             'q' => $q,
             'products' => $products,
             'facets' => $facets,
+            'counts' => $counts,
             'selected' => $selected,
             'priceRange' => $priceRange,
             'min' => $min,
@@ -230,6 +229,39 @@ class CatalogController extends Controller
             [$key, $value] = explode(':', $category->rule, 2);
             $query->whereHas('attributeValues', fn ($a) => $a->where('key', $key)->where('value', $value));
         }
+    }
+
+    /** Values ticked within one facet widen the results (OR); separate facets narrow them (AND). */
+    private function applyFacets(Builder $query, $selected): void
+    {
+        foreach ($selected as $key => $values) {
+            $query->whereHas('attributeValues', fn ($a) => $a->where('key', $key)->whereIn('value', $values));
+        }
+    }
+
+    /**
+     * How many results each option would give if ticked: an option is counted with every other filter
+     * applied, including the choices made in other facets but not those in its own (they would be OR-ed).
+     * Unticked facets share one query; each facet with a choice needs its own.
+     */
+    private function facetCounts(Builder $filtered, $selected, array $keys): array
+    {
+        $groups = [array_values(array_diff($keys, $selected->keys()->all()))];
+        foreach ($selected->keys() as $key) {
+            $groups[] = [$key];
+        }
+        $counts = [];
+        foreach (array_filter($groups) as $group) {
+            $scope = clone $filtered;
+            $this->applyFacets($scope, $selected->except($group));
+            $rows = ProductAttribute::whereIn('product_id', $scope->select('products.id'))->whereIn('key', $group)
+                ->selectRaw('`key`, `value`, COUNT(DISTINCT product_id) as total')->groupBy('key', 'value')->get();
+            foreach ($rows as $row) {
+                $counts[$row->key][$row->value] = (int) $row->total;
+            }
+        }
+
+        return $counts;
     }
 
     private function facets($productIds, array $keys): array

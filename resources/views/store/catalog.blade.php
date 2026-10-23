@@ -106,6 +106,8 @@
 
                 {{-- Only this frame is replaced when a filter, the sort order or the page changes --}}
                 <turbo-frame id="results" target="_top" data-turbo-action="advance" class="mt-3 block">
+                    {{-- The filter panel sits outside this frame; these counts keep its numbers in step with the results. --}}
+                    <script type="application/json" data-facet-counts>@json((object) $counts)</script>
                     <div class="flex min-h-8 flex-wrap items-center gap-2" data-total="{{ $products->total() }}" data-active="{{ $activeCount }}">
                         <p class="mr-1 text-sm text-muted" aria-live="polite"><strong class="font-semibold text-ink">{{ number_format($products->total()) }}</strong> {{ Str::plural('product', $products->total()) }}@if ($q) for “{{ $q }}”@endif</p>
                         @foreach ($chips as [$label, $field, $value])

@@ -36,19 +36,21 @@
             @if ($key === 'colour')
                 <div class="grid grid-cols-6 gap-2.5 pt-1 pb-1">
                     @foreach ($facet['options'] as $option)
-                        <label class="relative cursor-pointer" title="{{ $option->value }} ({{ $option->total }})">
-                            <input type="checkbox" name="f[colour][]" value="{{ $option->value }}" class="peer sr-only" @checked(in_array($option->value, $chosen, true))>
+                        @php $n = $counts[$key][$option->value] ?? 0; $on = in_array($option->value, $chosen, true); @endphp
+                        <label class="facet-option relative cursor-pointer" title="{{ $option->value }} ({{ $n }})">
+                            <input type="checkbox" name="f[colour][]" value="{{ $option->value }}" class="peer sr-only" @checked($on) @disabled(! $n && ! $on)>
                             <span class="block aspect-square rounded-full border border-line-strong ring-offset-2 ring-offset-surface transition peer-checked:ring-2 peer-checked:ring-night peer-focus-visible:ring-2 peer-focus-visible:ring-primary hover:scale-110" style="background: {{ $swatches[$option->value] ?? '#e5e7eb' }}"></span>
                             <x-lucide-check class="pointer-events-none absolute inset-0 m-auto hidden size-3.5 peer-checked:block {{ in_array($option->value, $dark, true) ? 'text-white' : 'text-night' }}" stroke-width="3" aria-hidden="true" />
-                            <span class="sr-only">{{ $option->value }} ({{ $option->total }})</span>
+                            <span class="sr-only">{{ $option->value }} (<span data-facet-count>{{ $n }}</span>)</span>
                         </label>
                     @endforeach
                 </div>
             @elseif ($key === 'size')
                 <div class="flex flex-wrap gap-2 pt-1 pb-1">
                     @foreach ($facet['options'] as $option)
-                        <label class="cursor-pointer">
-                            <input type="checkbox" name="f[size][]" value="{{ $option->value }}" class="peer sr-only" @checked(in_array($option->value, $chosen, true))>
+                        @php $n = $counts[$key][$option->value] ?? 0; $on = in_array($option->value, $chosen, true); @endphp
+                        <label class="facet-option cursor-pointer" title="{{ $n }} {{ Str::plural('product', $n) }}">
+                            <input type="checkbox" name="f[size][]" value="{{ $option->value }}" class="peer sr-only" @checked($on) @disabled(! $n && ! $on)>
                             <span class="grid h-10 min-w-11 place-items-center rounded-control border border-line-strong px-2.5 text-sm font-medium transition-colors peer-checked:border-night peer-checked:bg-night peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-primary hover:border-ink">{{ $option->value }}</span>
                         </label>
                     @endforeach
@@ -62,11 +64,12 @@
                 @endif
                 <div class="{{ $long ? 'max-h-60 overflow-y-auto overscroll-contain pr-1' : '' }}" @if ($long) data-lenis-prevent @endif>
                     @foreach ($facet['options'] as $option)
-                        <label class="check-row" @if ($long) x-show="!term || @js(mb_strtolower($option->value)).includes(term.toLowerCase())" @endif>
-                            <input type="checkbox" name="f[{{ $key }}][]" value="{{ $option->value }}" class="peer sr-only" @checked(in_array($option->value, $chosen, true))>
+                        @php $n = $counts[$key][$option->value] ?? 0; $on = in_array($option->value, $chosen, true); @endphp
+                        <label class="facet-option check-row" @if ($long) x-show="!term || @js(mb_strtolower($option->value)).includes(term.toLowerCase())" @endif>
+                            <input type="checkbox" name="f[{{ $key }}][]" value="{{ $option->value }}" class="peer sr-only" @checked($on) @disabled(! $n && ! $on)>
                             <span class="check-box" aria-hidden="true"><x-lucide-check class="size-3" stroke-width="3.5" /></span>
                             <span class="flex-1 peer-checked:font-semibold peer-checked:text-ink">{{ $option->value }}</span>
-                            <span class="text-xs text-muted tabular-nums">{{ $option->total }}</span>
+                            <span class="text-xs text-muted tabular-nums" data-facet-count>{{ $n }}</span>
                         </label>
                     @endforeach
                 </div>

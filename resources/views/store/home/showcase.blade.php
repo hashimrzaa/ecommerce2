@@ -17,9 +17,17 @@
         {{-- Stage --}}
         <div class="showcase-stage relative touch-pan-y select-none lg:order-2" @pointerdown="down($event)" @pointerup="up($event)" @pointercancel="startX = null">
             @foreach ($items as $i => $product)
-                <a href="{{ $product->url }}" class="showcase-card" :style="card({{ $i }})" @click="pick({{ $i }}, $event)" draggable="false"
+                @php
+                    // The first arrangement is drawn by the server (same maths as card() in app.js), so the fan of
+                    // cards is in place before any script runs and only the cards on show load straight away.
+                    $d = $i > $items->count() / 2 ? $i - $items->count() : $i;
+                    $a = abs($d);
+                    $first = "transform: translateX(calc($d * var(--step))) translateZ(calc($a * var(--depth))) rotateY(".($d * -30).'deg); opacity: '.($a > 2 ? 0 : 1 - $a * 0.22).'; z-index: '.(10 - $a).($a > 2 ? '; pointer-events: none' : '');
+                @endphp
+                <a href="{{ $product->url }}" class="showcase-card" style="{{ $first }}" :style="card({{ $i }})" @click="pick({{ $i }}, $event)" draggable="false"
                     :aria-hidden="(active !== {{ $i }}).toString()" :tabindex="active === {{ $i }} ? 0 : -1" aria-label="{{ $product->title }}, {{ money($product->price) }}">
-                    <x-product-image :product="$product" :eager="$i < 3" :full="true" draggable="false" :fetchpriority="$i === 0 ? 'high' : 'auto'" />
+                    {{-- The 560×700 listing photo is sharp at this card size and a fraction of the full photo's weight --}}
+                    <x-product-image :product="$product" :eager="$a <= 2" draggable="false" :fetchpriority="$i === 0 ? 'high' : 'auto'" />
                     <span class="absolute inset-0 bg-linear-to-t from-night/80 via-night/5 to-transparent" aria-hidden="true"></span>
                     @if ($product->on_sale)<span class="badge absolute bottom-16 left-1/2 -translate-x-1/2 bg-accent text-white">−{{ $product->discount_pct }}%</span>@endif
                     <span class="absolute inset-x-4 bottom-4 flex flex-col items-center gap-1.5 text-center text-white">

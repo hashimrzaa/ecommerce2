@@ -1,7 +1,6 @@
 import * as Turbo from '@hotwired/turbo';
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
-import { startMotion, stopMotion, refreshMotion } from './motion';
 
 Alpine.plugin(collapse);
 
@@ -255,9 +254,12 @@ Alpine.data('showcase', (total) => ({
 
     init() {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || total < 2) return;
-        this.timer = setInterval(() => {
+        // Turning only starts once the page has loaded, so the first card's photo is not raced by the others.
+        const play = () => (this.timer = setInterval(() => {
             if (!this.paused && document.visibilityState === 'visible') this.next();
-        }, 4200);
+        }, 4200));
+        if (document.readyState === 'complete') play();
+        else window.addEventListener('load', play, { once: true });
     },
     destroy() {
         clearInterval(this.timer);
@@ -487,21 +489,56 @@ Alpine.data('catalogFilters', (total, active) => ({
     active,
     timer: null,
     onLoad: null,
+    onFetch: null,
 
     init() {
+        // While new results load, the frame keeps its height: a shorter page would otherwise make the
+        // browser yank the scroll position up mid-swap and leave a gap under the sticky filter panel.
+        this.onFetch = (event) => {
+            if (event.detail.fetchOptions?.headers?.['Turbo-Frame'] !== 'results') return;
+            const frame = document.getElementById('results');
+            if (frame) frame.style.minHeight = `${frame.offsetHeight}px`;
+        };
         this.onLoad = (event) => {
             if (event.target.id !== 'results') return;
-            const meta = event.target.querySelector('[data-total]');
-            if (!meta) return;
-            this.total = Number(meta.dataset.total);
-            this.active = Number(meta.dataset.active);
+            const frame = event.target;
+            const meta = frame.querySelector('[data-total]');
+            if (meta) {
+                this.total = Number(meta.dataset.total);
+                this.active = Number(meta.dataset.active);
+                this.updateCounts(frame.querySelector('[data-facet-counts]'));
+            }
+            // Scrolled past the top of the results: glide back to where the filter panel and the results
+            // line up (the panel is then fully in view), then let the frame take its new height.
+            const top = frame.getBoundingClientRect().top;
+            if (top < 0) {
+                const y = window.scrollY + this.$refs.form.parentElement.getBoundingClientRect().top - 16;
+                if (window.__lenis) window.__lenis.scrollTo(y, { duration: 0.6 });
+                else window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+            setTimeout(() => (frame.style.minHeight = ''), top < 0 ? 650 : 0);
         };
+        document.addEventListener('turbo:before-fetch-request', this.onFetch);
         document.addEventListener('turbo:frame-load', this.onLoad);
         this.$watch('sheet', (open) => document.body.classList.toggle('overflow-hidden', open));
     },
     destroy() {
         document.removeEventListener('turbo:frame-load', this.onLoad);
+        document.removeEventListener('turbo:before-fetch-request', this.onFetch);
         document.body.classList.remove('overflow-hidden');
+    },
+    /** Each option shows how many results ticking it would give; options that would give none are switched off. */
+    updateCounts(source) {
+        if (!source) return;
+        const counts = JSON.parse(source.textContent);
+        this.$refs.form.querySelectorAll('input[name^="f["]').forEach((input) => {
+            const key = input.name.slice(2, -3);
+            const n = counts[key]?.[input.value] ?? 0;
+            input.disabled = n === 0 && !input.checked;
+            const label = input.closest('label');
+            label.querySelectorAll('[data-facet-count]').forEach((el) => (el.textContent = n));
+            if (label.title) label.title = label.title.replace(/\d+(?=\)|\s+product)/, n).replace(/products?$/, n === 1 ? 'product' : 'products');
+        });
     },
     submit() {
         clearTimeout(this.timer);
@@ -662,19 +699,27 @@ const measureHeader = () => {
 };
 window.addEventListener('resize', measureHeader);
 
+/*
+ | The motion layer (GSAP, ScrollTrigger, smooth scroll) is a separate file fetched once the first page is
+ | on screen and the browser is idle, so it never delays the first paint or the first tap.
+ */
+let motion = null;
+const loadMotion = () => (motion ??= import('./motion'));
+const whenIdle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 300));
+
 let started = false;
 const boot = () => {
     started = true;
     measureHeader();
-    startMotion();
+    loadMotion().then((m) => m.startMotion());
 };
 document.addEventListener('turbo:render', boot);
-// First page: start as soon as the document is parsed rather than waiting for every image to load.
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => started || boot());
-else queueMicrotask(() => started || boot());
-document.addEventListener('turbo:before-render', stopMotion);
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => started || measureHeader());
+else measureHeader();
+window.addEventListener('load', () => whenIdle(() => started || boot()), { once: true });
+document.addEventListener('turbo:before-render', () => motion?.then((m) => m.stopMotion()));
 document.addEventListener('turbo:before-visit', () => (Alpine.store('cart').open = false));
-document.addEventListener('turbo:frame-load', (event) => refreshMotion(event.target));
+document.addEventListener('turbo:frame-load', (event) => motion?.then((m) => m.refreshMotion(event.target)));
 // A failed background request (offline, server error) falls back to a normal page load.
 document.addEventListener('turbo:fetch-request-error', (event) => {
     const url = event.detail?.request?.url;

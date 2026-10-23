@@ -129,8 +129,14 @@ function splitWords(el) {
     return inner;
 }
 
+/*
+ | Content is never hidden while the page loads: whatever is already on screen when the motion layer
+ | starts simply stays put, and only what is still below the fold makes an entrance as it scrolls in.
+ */
+const belowFold = (el) => el.getBoundingClientRect().top > window.innerHeight;
+
 function splitHeadings(root) {
-    gsap.utils.toArray('[data-split]', root).forEach((el) => {
+    gsap.utils.toArray('[data-split]', root).filter(belowFold).forEach((el) => {
         const words = splitWords(el);
         gsap.set(el, { autoAlpha: 1 });
         gsap.from(words, {
@@ -148,7 +154,7 @@ function splitHeadings(root) {
 /* ---------- Reveals ---------- */
 
 function reveals(root) {
-    gsap.utils.toArray('[data-reveal]', root).forEach((el) => {
+    gsap.utils.toArray('[data-reveal]', root).filter(belowFold).forEach((el) => {
         gsap.fromTo(el, { autoAlpha: 0, y: 28 }, {
             autoAlpha: 1, y: 0, duration: 0.8, ease: 'power3.out', delay: Number(el.dataset.delay || 0),
             scrollTrigger: { trigger: el, start: 'top 94%', once: true },
@@ -156,7 +162,7 @@ function reveals(root) {
     });
 
     // Product cards tip up into place in rows, wherever they appear.
-    const cards = gsap.utils.toArray('.product-card', root);
+    const cards = gsap.utils.toArray('.product-card', root).filter(belowFold);
     if (cards.length) {
         gsap.set(cards, { autoAlpha: 0, y: 40, rotateX: -12, transformPerspective: 900, transformOrigin: '50% 100%' });
         ScrollTrigger.batch(cards, {
@@ -169,7 +175,7 @@ function reveals(root) {
         });
     }
 
-    gsap.utils.toArray('[data-reveal-group]', root).forEach((group) => {
+    gsap.utils.toArray('[data-reveal-group]', root).filter(belowFold).forEach((group) => {
         const items = [...group.children];
         gsap.set(items, { autoAlpha: 0, y: 26 });
         ScrollTrigger.create({
